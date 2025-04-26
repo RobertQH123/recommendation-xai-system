@@ -2,6 +2,7 @@ CREATE TABLE estudiantes (
     estudiante_id SERIAL PRIMARY KEY,  -- ID único para cada estudiante
     nombre VARCHAR(100),
     correo VARCHAR(100),
+    password VARCHAR(255) NOT NULL;
     nivel_academico INT,  -- Un número que indique el nivel académico del estudiante
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ultima_actividad TIMESTAMP  -- Fecha de la última interacción con el sistema

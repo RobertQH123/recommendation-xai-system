@@ -31,7 +31,7 @@ class Estudiante(db.Model):
     nivel_academico = db.Column(db.Integer, nullable=False)
     fecha_registro = db.Column(db.DateTime)
     ultima_actividad = db.Column(db.DateTime)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
 
 
 # Rutas de autenticación
@@ -43,7 +43,7 @@ def register():
         nombre=data["nombre"],
         correo=data["correo"],
         nivel_academico=data["nivel_academico"],
-        password_hash=hashed_pw,
+        password=hashed_pw,
     )
     db.session.add(nuevo_estudiante)
     db.session.commit()
@@ -54,18 +54,18 @@ def register():
 def login():
     data = request.get_json()
     estudiante = Estudiante.query.filter_by(correo=data["correo"]).first()
-    if estudiante and bcrypt.check_password_hash(
-        estudiante.password_hash, data["password"]
-    ):
+    if estudiante and bcrypt.check_password_hash(estudiante.password, data["password"]):
         access_token = create_access_token(identity=estudiante.estudiante_id)
-        return jsonify(access_token=access_token)
+        return jsonify({"token": access_token, "user_id": estudiante.estudiante_id})
     return jsonify(message="Credenciales inválidas"), 401
 
 
 @app.route("/perfil", methods=["GET"])
 @jwt_required()
 def perfil():
+    return jsonify(message="Credenciales inválidas")
     estudiante_id = get_jwt_identity()
+    return jsonify(message=estudiante_id)
     estudiante = Estudiante.query.get(estudiante_id)
     return jsonify(
         id=estudiante.estudiante_id,

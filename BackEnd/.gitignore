@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.cover
+
+# Flask instance folder
+instance/
+
+# Flask .env files
+.env
+
+# Python virtual environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and Editor directories
+.vscode/
+.idea/
+
+# Pytest
+.pytest_cache/
+
+# Coverage reports
+.coverage
+.coverage.*
+
+# Migrations
+migrations/
+
+# VSCode settings
+.vscode/
