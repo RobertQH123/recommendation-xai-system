@@ -2,74 +2,106 @@ from .db import db
 from datetime import datetime
 
 
-class Estudiante(db.Model):
-    __tablename__ = "estudiantes"
-    estudiante_id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100))
-    correo = db.Column(db.String(100), unique=True)
+class User(db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    nivel_academico = db.Column(db.Integer)
-    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
-    ultima_actividad = db.Column(db.DateTime)
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
 
-    interacciones = db.relationship("Interaccion", backref="estudiante", lazy=True)
-    recomendaciones = db.relationship("Recomendacion", backref="estudiante", lazy=True)
-    feedbacks = db.relationship("Feedback", backref="estudiante", lazy=True)
-
-
-class Recurso(db.Model):
-    __tablename__ = "recursos"
-    recurso_id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(200))
-    descripcion = db.Column(db.Text)
-    tipo_recurso = db.Column(db.String(50))
-    dificultad = db.Column(db.Integer)
-    tema = db.Column(db.String(100))
-    url_recurso = db.Column(db.Text)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
-
-    interacciones = db.relationship("Interaccion", backref="recurso", lazy=True)
-    recomendaciones = db.relationship("Recomendacion", backref="recurso", lazy=True)
-
-
-class Interaccion(db.Model):
-    __tablename__ = "interacciones"
-    interaccion_id = db.Column(db.Integer, primary_key=True)
-    estudiante_id = db.Column(
-        db.Integer, db.ForeignKey("estudiantes.estudiante_id"), nullable=False
+    interactions = db.relationship("Interaction", backref="user", lazy=True)
+    tests = db.relationship("Test", backref="user", lazy=True)
+    knowledge_profiles = db.relationship("KnowledgeProfile", backref="user", lazy=True)
+    recommendations = db.relationship(
+        "RecommendationHistory", backref="user", lazy=True
     )
-    recurso_id = db.Column(
-        db.Integer, db.ForeignKey("recursos.recurso_id"), nullable=False
-    )
-    tiempo_invertido = db.Column(db.Integer)
-    puntuacion = db.Column(db.Integer)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
 
 
-class Recomendacion(db.Model):
-    __tablename__ = "recomendaciones"
-    recomendacion_id = db.Column(db.Integer, primary_key=True)
-    estudiante_id = db.Column(
-        db.Integer, db.ForeignKey("estudiantes.estudiante_id"), nullable=False
-    )
-    recurso_id = db.Column(
-        db.Integer, db.ForeignKey("recursos.recurso_id"), nullable=False
-    )
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
-    explicacion = db.Column(db.Text)
+class Category(db.Model):
+    __tablename__ = "categories"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
 
-    feedbacks = db.relationship("Feedback", backref="recomendacion", lazy=True)
+    topics = db.relationship("Topic", backref="category", lazy=True)
 
 
-class Feedback(db.Model):
-    __tablename__ = "feedback"
-    feedback_id = db.Column(db.Integer, primary_key=True)
-    estudiante_id = db.Column(
-        db.Integer, db.ForeignKey("estudiantes.estudiante_id"), nullable=False
+class Topic(db.Model):
+    __tablename__ = "topics"
+    id = db.Column(db.Integer, primary_key=True)
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+
+    resources = db.relationship("Resource", backref="topic", lazy=True)
+    tests = db.relationship("Test", backref="topic", lazy=True)
+    knowledge_profiles = db.relationship("KnowledgeProfile", backref="topic", lazy=True)
+
+
+class Level(db.Model):
+    __tablename__ = "levels"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+
+    resources = db.relationship("Resource", backref="level", lazy=True)
+    tests = db.relationship("Test", backref="level", lazy=True)
+    knowledge_profiles = db.relationship("KnowledgeProfile", backref="level", lazy=True)
+
+
+class Resource(db.Model):
+    __tablename__ = "resources"
+    id = db.Column(db.Integer, primary_key=True)
+    topic_id = db.Column(db.Integer, db.ForeignKey("topics.id"), nullable=False)
+    level_id = db.Column(db.Integer, db.ForeignKey("levels.id"), nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text)
+    resource_url = db.Column(db.Text)
+    difficulty = db.Column(db.Numeric(3, 2))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    interactions = db.relationship("Interaction", backref="resource", lazy=True)
+    recommendations = db.relationship(
+        "RecommendationHistory", backref="resource", lazy=True
     )
-    recomendacion_id = db.Column(
-        db.Integer, db.ForeignKey("recomendaciones.recomendacion_id"), nullable=False
-    )
-    puntuacion = db.Column(db.Integer)
-    comentario = db.Column(db.Text)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Interaction(db.Model):
+    __tablename__ = "interactions"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    resource_id = db.Column(db.Integer, db.ForeignKey("resources.id"), nullable=False)
+    interaction_date = db.Column(db.DateTime, default=datetime.utcnow)
+    rating = db.Column(db.Integer)
+    comment = db.Column(db.Text)
+
+
+class Test(db.Model):
+    __tablename__ = "tests"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    topic_id = db.Column(db.Integer, db.ForeignKey("topics.id"), nullable=False)
+    level_id = db.Column(db.Integer, db.ForeignKey("levels.id"), nullable=False)
+    test_date = db.Column(db.DateTime, default=datetime.utcnow)
+    score = db.Column(db.Numeric(4, 2), nullable=False)
+
+
+class KnowledgeProfile(db.Model):
+    __tablename__ = "knowledge_profile"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    topic_id = db.Column(db.Integer, db.ForeignKey("topics.id"), nullable=False)
+    level_id = db.Column(db.Integer, db.ForeignKey("levels.id"), nullable=False)
+    mastery_level = db.Column(db.Numeric(3, 2), nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class RecommendationHistory(db.Model):
+    __tablename__ = "recommendation_history"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    resource_id = db.Column(db.Integer, db.ForeignKey("resources.id"), nullable=False)
+    recommendation_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(
+        db.String(50), default="pending"
+    )  # 'pending', 'completed', 'dismissed'
+    feedback = db.Column(db.Text)
