@@ -23,7 +23,7 @@ mdurl==0.1.2
 ordered-set==4.1.0
 packaging==24.2
 pillow==11.0.0
-pip==24.3.1
+pip==25.1.1
 psycopg2-binary==2.9.10
 Pygments==2.18.0
 PyJWT==2.10.1
@@ -38,3 +38,7 @@ typing_extensions==4.12.2
 Werkzeug==2.3.7
 wrapt==1.17.0
 zope.interface==7.2
+pandas 
+numpy 
+scikit-learn 
+shap
