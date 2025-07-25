@@ -125,15 +125,81 @@ def get_recommendations():
         )
         db.session.add(history)
 
+        # 🔤 Generar explicación en texto
+
+        # 1. Coincidencias de texto
+        palabras_interes = [
+            w for w in temas_text.split() if w in vectorizer.get_feature_names_out()
+        ]
+        coincidencias = [w for w in palabras_interes if w in row["text"].lower()]
+
+        # 2. Dominio del usuario
+        topic_name = Topic.query.get(row["topic_id"]).name
+        level_name = Level.query.get(row["level_id"]).name
+        dom = perfil.get((topic_name, level_name), 0)
+
+        # 3. Calificación colaborativa
+        calif = coll_mean.get(row["id"], 0)
+
+        # # 4. Mensaje de explicación
+        # explicacion_texto = f"Este recurso fue recomendado porque contiene los temas: {', '.join(coincidencias)} relacionados con tus intereses recientes. "
+        # if dom < 0.5:
+        #     explicacion_texto += f"Además, tu nivel de dominio en '{topic_name} - {level_name}' es bajo , por lo que necesitas reforzar ese tema. "
+        # if calif > 0:
+        #     explicacion_texto += (
+        #         f"Otros usuarios lo calificaron con un promedio de {calif:.1f}/5."
+        #     )
+
+        # 4. Mensaje de explicación con SHAP
+        total = sum(abs(v) for v in vals[-3:]) + 1e-8  # evitar división por cero
+        impact_sim = abs(vals[-3]) / total * 100
+        impact_collab = abs(vals[-2]) / total * 100
+        impact_need = abs(vals[-1]) / total * 100
+
+        # 1. Coincidencias de texto
+        palabras_interes = [
+            w for w in temas_text.split() if w in vectorizer.get_feature_names_out()
+        ]
+        coincidencias = [w for w in palabras_interes if w in row["text"].lower()]
+
+        # 2. Dominio del usuario
+        topic_name = Topic.query.get(row["topic_id"]).name
+        level_name = Level.query.get(row["level_id"]).name
+        dom = perfil.get((topic_name, level_name), 0)
+
+        # 3. Calificación colaborativa
+        calif = coll_mean.get(row["id"], 0)
+
+        # 📘 Explicación basada en SHAP
+        explicacion_texto = (
+            f"Este recurso fue recomendado principalmente porque tu nivel de dominio en el tema "
+            f"'{topic_name} - {level_name}' es bajo, lo que representó un impacto del {impact_need:.1f}% sobre la recomendación. "
+        )
+
+        if coincidencias:
+            explicacion_texto += (
+                f"Además, el contenido coincide con tus intereses recientes ('{', '.join(coincidencias)}'), "
+                f"con un impacto del {impact_sim:.1f}%. "
+            )
+        else:
+            explicacion_texto += f"El contenido también mostró cierta relación con tus intereses, aportando un {impact_sim:.1f}% a la recomendación. "
+
+        if calif > 0:
+            explicacion_texto += (
+                f"Finalmente, otros estudiantes calificaron este recurso con un promedio de {calif:.1f}/5, "
+                f"lo que aportó un {impact_collab:.1f}%."
+            )
+
+        # 📌 Añadir al resultado
         results.append(
             {
                 "resource_id": int(row["id"]),
                 "name": row["name"],
                 "score": float(row["score_hybrid"]),
                 "explanation": explanations,
+                "explanation_text": explicacion_texto.strip(),
             }
         )
-
     db.session.commit()
 
     return jsonify(recommendations=results), 200

@@ -39,10 +39,29 @@ def create_app():
     limiter.init_app(app)
 
     with app.app_context():
-        from .routers import auth_bp, rec_bp
+        from .routers import (
+            auth_bp,
+            rec_bp,
+            category_bp,
+            topic_bp,
+            level_bp,
+            resource_bp,
+            interaction_bp,
+            test_bp,
+            profile_bp,
+            recommendation_history_bp,
+        )
 
         app.register_blueprint(auth_bp)
         app.register_blueprint(rec_bp)
+        app.register_blueprint(category_bp)
+        app.register_blueprint(topic_bp)
+        app.register_blueprint(level_bp)
+        app.register_blueprint(resource_bp)
+        app.register_blueprint(interaction_bp)
+        app.register_blueprint(test_bp)
+        app.register_blueprint(profile_bp)
+        app.register_blueprint(recommendation_history_bp)
         db.create_all()  # Crea las tablas al iniciar la app
 
     return app
