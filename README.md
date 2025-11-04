@@ -1,4 +1,4 @@
-_Sistema de Recomendación de Aprendizaje con IA Explicable_
+Sistema de Recomendación de Aprendizaje con IA Explicable_
 
 > Un sistema de recomendación de aprendizaje personalizado que utiliza IA Explicable (XAI) para mejorar la enseñanza de las matemáticas en la educación secundaria.
 
